@@ -1,3 +1,12 @@
+// ===================== PAYMENT INFO (🔧 apni details ithe badal) =====================
+
+const PAYMENT_INFO = {
+  upiId: "your-upi-id@bank",      // 🔧 tuza actual UPI ID
+  amount: "999",                  // 🔧 tuza actual price (₹)
+  contactMobile: "9999999999"     // 🔧 tuza WhatsApp/mobile number
+};
+
+
 // ===================== BASIC HELPERS =====================
 
 const $ = (id) => document.getElementById(id);
@@ -364,6 +373,7 @@ document
         button.dataset.auth !== "register"
       );
 
+      $("authMsg").classList.remove("success");
       $("authMsg").textContent = "";
 
     };
@@ -413,8 +423,8 @@ async function authRequest(path, payload, attempt = 1) {
     );
   }
 
-  if (!data.token) {
-    // Empty/invalid body on a 2xx response — likely a cold-start hiccup
+  if (text === "") {
+    // Genuinely empty body on a 2xx response — likely a cold-start hiccup
     if (attempt < 3) {
       $("authMsg").textContent =
         "Server start ho raha hai, thoda ruk...";
@@ -436,6 +446,7 @@ $("loginForm").onsubmit = async (event) => {
 
   event.preventDefault();
 
+  $("authMsg").classList.remove("success");
   $("authMsg").textContent = "";
 
   try {
@@ -480,6 +491,7 @@ $("registerForm").onsubmit = async (event) => {
 
   event.preventDefault();
 
+  $("authMsg").classList.remove("success");
   $("authMsg").textContent = "";
 
   try {
@@ -495,24 +507,22 @@ $("registerForm").onsubmit = async (event) => {
       }
     );
 
-    token = data.token;
+    // Registration no longer logs the mandal in directly — account stays
+    // "pending" until payment is confirmed and an admin approves it.
+    event.target.reset();
 
-    mandal = data.mandal;
+    document
+      .querySelector('.auth-tab[data-auth="login"]')
+      .click();
 
-    localStorage.setItem(
-      "gm_token",
-      token
-    );
-
-    localStorage.setItem(
-      "gm_mandal",
-      JSON.stringify(mandal)
-    );
-
-    showApp();
+    $("authMsg").classList.add("success");
+    $("authMsg").textContent =
+      (data.message || "Registration यशस्वी!") +
+      ` UPI ${PAYMENT_INFO.upiId} वर ₹${PAYMENT_INFO.amount} पाठवा आणि screenshot ${PAYMENT_INFO.contactMobile} वर WhatsApp करा — approval नंतर login करता येईल.`;
 
   } catch (error) {
 
+    $("authMsg").classList.remove("success");
     $("authMsg").textContent =
       error.message;
 

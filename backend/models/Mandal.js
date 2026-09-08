@@ -6,6 +6,7 @@ const mandalSchema = new mongoose.Schema({
   username:{type:String,required:true,unique:true,lowercase:true,trim:true},
   passwordHash:{type:String,required:true},
   accessUntil:{type:Date,required:true},
+  isApproved:{type:Boolean,default:false},
   createdAt:{type:Date,default:Date.now}
 });
 module.exports=mongoose.model('Mandal',mandalSchema);

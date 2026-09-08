@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin - Ganesh Mandal Pro</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{padding:20px}
+  .admin-wrap{max-width:900px;margin:auto}
+  .login-card{max-width:340px;margin:80px auto;background:#fff;border:1px solid #e2e4e8;border-radius:11px;padding:24px}
+  .login-card label{display:block;margin:10px 0 4px;font-size:13px;color:#6b7280}
+  .login-card input{width:100%;padding:9px;border:1px solid #ddd;border-radius:7px}
+  .login-card button{width:100%;margin-top:16px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e4e8;border-radius:11px;overflow:hidden}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eee;font-size:14px}
+  th{background:#f3f4f6}
+  .badge{padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700}
+  .badge.pending{background:#fef3c7;color:#92400e}
+  .badge.approved{background:#dcfce7;color:#166534}
+  .row-actions{display:flex;gap:6px}
+  .row-actions button{padding:6px 10px;font-size:12px}
+  #errMsg{color:#dc2626;text-align:center;margin-top:10px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login-card">
+  <h2 style="margin-top:0">Admin Login</h2>
+  <form id="adminLoginForm">
+    <label>Username</label>
+    <input id="adminUsername" required>
+    <label>Password</label>
+    <input id="adminPassword" type="password" required>
+    <button class="primary">Login</button>
+  </form>
+  <div id="errMsg"></div>
+</div>
+
+<div id="panelView" class="admin-wrap hidden">
+  <header style="border-radius:11px;margin-bottom:20px">
+    <div class="brand">🕉️ Admin Panel</div>
+    <div class="header-actions">
+      <button class="secondary" id="refreshBtn">🔄 Refresh</button>
+      <button id="adminLogoutBtn">Logout</button>
+    </div>
+  </header>
+  <table>
+    <thead>
+      <tr><th>Mandal</th><th>Username</th><th>Mobile</th><th>Status</th><th>Registered</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="mandalRows"></tbody>
+  </table>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
