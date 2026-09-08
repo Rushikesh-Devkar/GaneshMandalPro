@@ -1,5 +1,5 @@
 
-Auth middleware · JS
+
 const jwt=require('jsonwebtoken');
 const Mandal=require('../models/Mandal');
 module.exports=async function(req,res,next){
