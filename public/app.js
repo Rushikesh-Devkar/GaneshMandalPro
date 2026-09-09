@@ -922,12 +922,45 @@ $("expenseBody").onclick = async (event) => {
 
 // ===================== PDF REPORT =====================
 
-$("reportBtn").onclick = () => {
+$("reportBtn").onclick = async () => {
 
-  window.open(
-    "/api/reports/pdf",
-    "_blank"
-  );
+  try {
+
+    const response = await fetch(
+      "/api/reports/pdf",
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      let msg = "Report डाउनलोड करता आला नाही";
+      try {
+        msg = JSON.parse(text).message || msg;
+      } catch (e) {}
+      throw new Error(msg);
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ganesh-mandal-report.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
 
 };
 

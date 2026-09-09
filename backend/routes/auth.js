@@ -1,4 +1,5 @@
 const router=require('express').Router();const bcrypt=require('bcryptjs');const jwt=require('jsonwebtoken');const Mandal=require('../models/Mandal');
+const {notifyAdminNewRegistration}=require('../utils/mailer');
 const seasonEnd=()=>new Date(`${new Date().getFullYear()}-12-31T23:59:59.999`);
 
 router.post('/register',async(req,res)=>{
@@ -10,6 +11,7 @@ router.post('/register',async(req,res)=>{
     if(exists)return res.status(409).json({message:'Username आधीच वापरलेला आहे'});
     const passwordHash=await bcrypt.hash(password,10);
     const mandal=await Mandal.create({name,address,mobile,username:username.toLowerCase(),passwordHash,accessUntil:seasonEnd(),isApproved:false});
+    notifyAdminNewRegistration(mandal); // fire-and-forget, response doesn't wait on email
     // No token on register anymore — account stays pending until payment is confirmed by admin.
     res.status(201).json({
       pending:true,
