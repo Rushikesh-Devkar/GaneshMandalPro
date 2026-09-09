@@ -1,5 +1,3 @@
-git 
-
 const jwt=require('jsonwebtoken');
 const Mandal=require('../models/Mandal');
 module.exports=async function(req,res,next){
@@ -14,4 +12,3 @@ module.exports=async function(req,res,next){
     req.mandal=mandal; next();
   }catch(e){return res.status(401).json({message:'Invalid login session'});}
 };
- 
