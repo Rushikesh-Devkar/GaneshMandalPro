@@ -125,7 +125,9 @@ async function loadDashboard() {
     data.online,
     data.pending,
     data.totalExpense,
-    data.balance
+    data.balance,
+    data.cashExpense,
+    data.onlineExpense
   ];
 
   const ids = [
@@ -135,7 +137,9 @@ async function loadDashboard() {
     "statOnline",
     "statPending",
     "statExpense",
-    "statBalance"
+    "statBalance",
+    "statCashExpense",
+    "statOnlineExpense"
   ];
 
   ids.forEach((id, index) => {
@@ -149,11 +153,45 @@ async function loadDashboard() {
 
 // ===================== VARGANI LIST =====================
 
+let varganiCache = [];
+let varganiFilter = null; // {status, mode, label}
+
 async function loadContributions() {
 
-  const list = await api(
-    "/contributions"
-  );
+  varganiCache = await api("/contributions");
+
+  renderContributions();
+}
+
+function renderContributions() {
+
+  let list = varganiCache;
+
+  if (varganiFilter) {
+
+    list = list.filter((item) => {
+      if (varganiFilter.status && item.status !== varganiFilter.status) return false;
+      if (varganiFilter.mode && item.paymentMode !== varganiFilter.mode) return false;
+      return true;
+    });
+
+  }
+
+  const badge = $("varganiFilterBadge");
+
+  if (varganiFilter) {
+    badge.classList.remove("hidden");
+    badge.innerHTML = `फिल्टर: ${varganiFilter.label} दाखवत आहे (${list.length}) <button id="clearVarganiFilter">✕ Clear</button>`;
+    $("clearVarganiFilter").onclick = () => {
+      varganiFilter = null;
+      document.querySelectorAll("#varganiTab .card.active-filter, .dashboard .card.active-filter")
+        .forEach((c) => c.classList.remove("active-filter"));
+      renderContributions();
+    };
+  } else {
+    badge.classList.add("hidden");
+    badge.innerHTML = "";
+  }
 
   const body = $("varganiBody");
 
@@ -261,11 +299,39 @@ async function loadContributions() {
 
 // ===================== EXPENSE LIST =====================
 
+let expenseCache = [];
+let expenseFilter = null; // {mode, label}
+
 async function loadExpenses() {
 
-  const list = await api(
-    "/expenses"
-  );
+  expenseCache = await api("/expenses");
+
+  renderExpenses();
+}
+
+function renderExpenses() {
+
+  let list = expenseCache;
+
+  if (expenseFilter) {
+    list = list.filter((item) => item.paymentMode === expenseFilter.mode);
+  }
+
+  const badge = $("expenseFilterBadge");
+
+  if (expenseFilter) {
+    badge.classList.remove("hidden");
+    badge.innerHTML = `फिल्टर: ${expenseFilter.label} दाखवत आहे (${list.length}) <button id="clearExpenseFilter">✕ Clear</button>`;
+    $("clearExpenseFilter").onclick = () => {
+      expenseFilter = null;
+      document.querySelectorAll(".dashboard .card.active-filter")
+        .forEach((c) => c.classList.remove("active-filter"));
+      renderExpenses();
+    };
+  } else {
+    badge.classList.add("hidden");
+    badge.innerHTML = "";
+  }
 
   const body = $("expenseBody");
 
@@ -273,7 +339,7 @@ async function loadExpenses() {
 
     body.innerHTML = `
       <tr>
-        <td colspan="6"
+        <td colspan="7"
             style="text-align:center;padding:25px">
           अजून कोणताही खर्च नाही
         </td>
@@ -298,6 +364,10 @@ async function loadExpenses() {
 
         <td>
           ${money(item.amount)}
+        </td>
+
+        <td>
+          ${item.paymentMode || "-"}
         </td>
 
         <td>
@@ -554,33 +624,88 @@ $("logoutBtn").onclick = () => {
 
 // ===================== MAIN TABS =====================
 
+function switchTab(tabName) {
+
+  document
+    .querySelectorAll(".tab")
+    .forEach((item) => {
+      item.classList.toggle(
+        "active",
+        item.dataset.tab === tabName
+      );
+    });
+
+  $("varganiTab").classList.toggle(
+    "hidden",
+    tabName !== "vargani"
+  );
+
+  $("expenseTab").classList.toggle(
+    "hidden",
+    tabName !== "expense"
+  );
+
+}
+
 document
   .querySelectorAll(".tab")
   .forEach((button) => {
 
     button.onclick = () => {
+      switchTab(button.dataset.tab);
+    };
+
+  });
+
+
+// ===================== DASHBOARD CARD FILTERS =====================
+
+document
+  .querySelectorAll(".card.clickable")
+  .forEach((card) => {
+
+    card.onclick = () => {
 
       document
-        .querySelectorAll(".tab")
-        .forEach((item) => {
+        .querySelectorAll(".dashboard .card.active-filter")
+        .forEach((c) => c.classList.remove("active-filter"));
 
-          item.classList.remove(
-            "active"
-          );
+      const tab = card.dataset.tab;
+      const mode = card.dataset.mode;
+      const status = card.dataset.status;
 
-        });
+      switchTab(tab);
 
-      button.classList.add("active");
+      if (tab === "vargani") {
 
-      $("varganiTab").classList.toggle(
-        "hidden",
-        button.dataset.tab !== "vargani"
-      );
+        if (!mode && !status) {
+          varganiFilter = null;
+        } else {
+          card.classList.add("active-filter");
+          varganiFilter = {
+            mode: mode || null,
+            status: status || null,
+            label: card.querySelector("span").textContent
+          };
+        }
 
-      $("expenseTab").classList.toggle(
-        "hidden",
-        button.dataset.tab !== "expense"
-      );
+        renderContributions();
+
+      } else if (tab === "expense") {
+
+        if (!mode) {
+          expenseFilter = null;
+        } else {
+          card.classList.add("active-filter");
+          expenseFilter = {
+            mode,
+            label: card.querySelector("span").textContent
+          };
+        }
+
+        renderExpenses();
+
+      }
 
     };
 
@@ -841,6 +966,9 @@ $("expenseForm").onsubmit = async (event) => {
             Number(
               $("expenseAmount").value
             ),
+
+          paymentMode:
+            $("expensePaymentMode").value,
 
           date:
             $("expenseDate").value,
